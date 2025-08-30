@@ -1,17 +1,14 @@
-from django.shortcuts import render
-from django.http import HttpResponse
+from rest_framework import viewsets
+from django.contrib.auth.models import User
+from rest_framework.serializers import ModelSerializer
 
-def home(request):
-    """
-    Home page for the Library Project
-    """
-    return render(request, 'home.html', {
-        'title': 'Library Management System',
-        'description': 'Welcome to the Library Management System'
-    })
+# Serializer for User
+class UserSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email']
 
-def home_simple(request):
-    """
-    Simple home page that returns plain text
-    """
-    return HttpResponse("Welcome to the Library Management System!")
+# ViewSet for User
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
