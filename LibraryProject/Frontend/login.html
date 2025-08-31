@@ -1,0 +1,27 @@
+<h1>Login</h1>
+<input type="text" id="username" placeholder="Username">
+<input type="password" id="password" placeholder="Password">
+<button onclick="login()">Login</button>
+
+<script>
+    const tokenUrl = 'http://127.0.0.1:8000/api/token/';
+
+    async function login() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        const res = await fetch(tokenUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+        if (data.access) {
+            localStorage.setItem('token', data.access);
+            alert('Login successful!');
+        } else {
+            alert('Login failed');
+        }
+    }
+</script>

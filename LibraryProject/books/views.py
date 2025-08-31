@@ -4,11 +4,12 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from django.db.models import Q
 from .models import Book
 from .serializers import BookSerializer
+from .permissions import IsAdminOrReadOnly
 
 class BookViewSet(viewsets.ModelViewSet):
     queryset = Book.objects.all().order_by("title")
     serializer_class = BookSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly]  # 👈 only admin can modify
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ["title", "author", "isbn"]
     ordering_fields = ["title", "author", "published_date"]

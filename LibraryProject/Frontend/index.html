@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Library Books</title>
+</head>
+
+<body>
+    <h1>Library Books</h1>
+    <input type="text" id="search" placeholder="Search by title, author, ISBN">
+    <button onclick="loadBooks()">Search</button>
+    <ul id="books"></ul>
+
+    <script>
+        const apiUrl = 'http://127.0.0.1:8000/api/books/';
+
+        async function loadBooks() {
+            const query = document.getElementById('search').value;
+            const url = query ? `${apiUrl}?title=${query}` : apiUrl;
+
+            const res = await fetch(url);
+            const books = await res.json();
+
+            const booksList = document.getElementById('books');
+            booksList.innerHTML = '';
+            books.forEach(book => {
+                booksList.innerHTML += `<li>
+                    ${book.title} by ${book.author} 
+                    (Available: ${book.copies_available})
+                </li>`;
+            });
+        }
+
+        // Load all books on page load
+        loadBooks();
+    </script>
+</body>
+
+</html>
