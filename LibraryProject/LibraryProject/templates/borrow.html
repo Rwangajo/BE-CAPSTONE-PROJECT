@@ -2,12 +2,13 @@
 <html>
 
 <head>
-    <title>Borrow Books</title>
+    <title>Borrow / Return Books</title>
 </head>
 
 <body>
     <h1>Borrow / Return Books</h1>
-    <p>Welcome, {{ user.username }} | <a href="/logout/">Logout</a></p>
+    <p id="welcome"></p>
+    <button onclick="logout()">Logout</button>
 
     <h2>Available Books</h2>
     <table border="1">
@@ -27,9 +28,14 @@
     <ul id="loanList"></ul>
 
     <script>
-        const token = localStorage.getItem('token'); // JWT stored after login
-        const booksUrl = '/api/books/';
-        const loansUrl = '/api/loans/';
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('You must login first!');
+            window.location.href = '/login.html';
+        }
+
+        const booksUrl = 'http://127.0.0.1:8000/api/books/';
+        const loansUrl = 'http://127.0.0.1:8000/api/loans/';
 
         async function loadBooks() {
             const res = await fetch(booksUrl + '?available=true', {
@@ -40,21 +46,20 @@
             tbody.innerHTML = '';
             books.forEach(book => {
                 tbody.innerHTML += `
-            <tr>
-                <td>${book.id}</td>
-                <td>${book.title}</td>
-                <td>${book.author}</td>
-                <td>${book.copies_available}</td>
-                <td>
-                    <button onclick="borrowBook(${book.id})">Borrow</button>
-                </td>
-            </tr>
-        `;
+                    <tr>
+                        <td>${book.id}</td>
+                        <td>${book.title}</td>
+                        <td>${book.author}</td>
+                        <td>${book.copies_available}</td>
+                        <td>
+                            <button onclick="borrowBook(${book.id})">Borrow</button>
+                        </td>
+                    </tr>`;
             });
         }
 
         async function loadLoans() {
-            const res = await fetch(`${loansUrl}user/`, {
+            const res = await fetch(loansUrl + 'user/', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const loans = await res.json();
@@ -62,16 +67,15 @@
             loanList.innerHTML = '';
             loans.forEach(l => {
                 loanList.innerHTML += `
-            <li>
-                ${l.book_title} | Borrowed: ${l.borrow_date} | Returned: ${l.return_date || 'Not yet'}
-                <button onclick="returnBook(${l.book})">Return</button>
-            </li>
-        `;
+                    <li>
+                        ${l.book_title} | Borrowed: ${l.borrow_date} | Returned: ${l.return_date || 'Not yet'}
+                        <button onclick="returnBook(${l.book})">Return</button>
+                    </li>`;
             });
         }
 
         async function borrowBook(bookId) {
-            const res = await fetch(`${loansUrl}checkout/`, {
+            await fetch(loansUrl + 'checkout/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -79,14 +83,12 @@
                 },
                 body: JSON.stringify({ book: bookId })
             });
-            const data = await res.json();
-            alert(JSON.stringify(data));
             loadBooks();
             loadLoans();
         }
 
         async function returnBook(bookId) {
-            const res = await fetch(`${loansUrl}return/`, {
+            await fetch(loansUrl + 'return/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -94,13 +96,15 @@
                 },
                 body: JSON.stringify({ book: bookId })
             });
-            const data = await res.json();
-            alert(JSON.stringify(data));
             loadBooks();
             loadLoans();
         }
 
-        // Load on page load
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
+        }
+
         loadBooks();
         loadLoans();
     </script>

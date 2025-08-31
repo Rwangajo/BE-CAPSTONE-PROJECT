@@ -13,7 +13,7 @@
         <input type="password" id="password" placeholder="Password" required><br>
         <button type="submit">Register</button>
     </form>
-    <a href="/templates/login.html">Already have an account? Login</a>
+    <a href="/login.html">Already have an account? Login</a>
 
     <script>
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
@@ -23,7 +23,7 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            const res = await fetch('/api/users/register/', {
+            const res = await fetch('http://127.0.0.1:8000/api/users/register/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, email, password })
@@ -32,7 +32,7 @@
             const data = await res.json();
             if (res.status === 201) {
                 alert('Registration successful! Please login.');
-                window.location.href = '/login/';
+                window.location.href = '/login.html';
             } else {
                 alert('Error: ' + JSON.stringify(data));
             }

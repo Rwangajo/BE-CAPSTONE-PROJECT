@@ -1,10 +1,8 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import LoanViewSet
-
-router = DefaultRouter()
-router.register(r'loans', LoanViewSet, basename='loans')
+from django.urls import path
+from .views import CheckoutLoanAPIView, ReturnLoanAPIView, UserLoansAPIView
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('checkout/', CheckoutLoanAPIView.as_view(), name='checkout'),
+    path('return/', ReturnLoanAPIView.as_view(), name='return'),
+    path('user/', UserLoansAPIView.as_view(), name='user-loans'),
 ]

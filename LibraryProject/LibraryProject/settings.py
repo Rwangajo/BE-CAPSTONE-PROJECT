@@ -42,9 +42,12 @@ INSTALLED_APPS = [
     'books',
     'users',
     'loans',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # add this at the top
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -59,7 +62,7 @@ ROOT_URLCONF = 'LibraryProject.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'LibraryProject' / 'templates'],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -133,4 +136,9 @@ REST_FRAMEWORK = {
     ),
 }
 TEMPLATES[0]['DIRS'] = [BASE_DIR / 'templates']
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5500",   # your frontend server
+    "http://127.0.0.1:5500",
+]
+
 

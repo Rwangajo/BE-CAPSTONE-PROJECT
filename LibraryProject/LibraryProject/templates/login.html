@@ -12,7 +12,7 @@
         <input type="password" id="password" placeholder="Password" required><br>
         <button type="submit">Login</button>
     </form>
-    <a href="/templates/register.html">Register</a>
+    <a href="/register.html">Register</a>
 
     <script>
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -21,18 +21,17 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
-            const res = await fetch('/api/token/', {
+            const res = await fetch('http://127.0.0.1:8000/api/token/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             });
 
             const data = await res.json();
-            if (res.access) {
-                // Save token in localStorage
+            if (res.ok) {
                 localStorage.setItem('token', data.access);
                 alert('Login successful!');
-                window.location.href = '/borrow/';
+                window.location.href = '/borrow.html';
             } else {
                 alert('Login failed: ' + JSON.stringify(data));
             }

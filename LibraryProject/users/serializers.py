@@ -1,14 +1,15 @@
 from rest_framework import serializers
-from django.contrib.auth.hashers import make_password
 from .models import User
 
 class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)  # prevent sending password back
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'role']
-        extra_kwargs = {'password': {'write_only': True}}
+        fields = ['id', 'username', 'email', 'password']
 
     def create(self, validated_data):
+        # Use create_user to hash password correctly
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
@@ -17,10 +18,11 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
     def update(self, instance, validated_data):
-        pwd = validated_data.pop("password", None)
-        for k, v in validated_data.items():
-            setattr(instance, k, v)
-        if pwd:
-            instance.password = make_password(pwd)
+        instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
+        instance.role = validated_data.get('role', instance.role)
+        password = validated_data.get('password')
+        if password:
+            instance.set_password(password)
         instance.save()
         return instance

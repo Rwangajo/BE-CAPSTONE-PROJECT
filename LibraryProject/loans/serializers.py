@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.utils import timezone
 from .models import Loan
 from books.models import Book
 from users.models import User
@@ -30,5 +31,20 @@ class LoanSerializer(serializers.ModelSerializer):
         book.save()
 
         # Create loan
-class ReturnBookSerializer(serializers.Serializer):
-    book = serializers.IntegerField()
+        return super().create(validated_data)
+
+
+class ReturnBookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Loan
+        fields = ['status']
+        read_only_fields = []
+
+    def update(self, instance, validated_data):
+        instance.status = 'returned'
+        instance.return_date = timezone.now()
+        instance.save()
+        # Increase available copies
+        instance.book.copies_available += 1
+        instance.book.save()
+        return instance
