@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Borrow Books</title>
+</head>
+
+<body>
+    <h1>Borrow / Return Books</h1>
+    <p>Welcome, {{ user.username }} | <a href="/logout/">Logout</a></p>
+
+    <input type="number" id="bookId" placeholder="Book ID">
+    <button onclick="borrowBook()">Borrow</button>
+    <button onclick="returnBook()">Return</button>
+
+    <h2>Your Loans</h2>
+    <ul id="loanList"></ul>
+
+    <script>
+        const token = '{{ request.user.auth_token.key if request.user.is_authenticated else "" }}';
+        const loanUrl = '/api/loans/';
+        const booksUrl = '/api/books/';
+
+        async function loadLoans() {
+            const res = await fetch(`${loanUrl}user/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const loans = await res.json();
+            const loanList = document.getElementById('loanList');
+            loanList.innerHTML = '';
+            loans.forEach(l => {
+                loanList.innerHTML += `<li>Book ID: ${l.book} | Borrowed: ${l.borrow_date} | Returned: ${l.return_date || 'Not yet'}</li>`;
+            });
+        }
+
+        async function borrowBook() {
+            const bookId = parseInt(document.getElementById('bookId').value);
+            const res = await fetch(`${loanUrl}checkout/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ book: bookId })
+            });
+            const data = await res.json();
+            alert(JSON.stringify(data));
+            loadLoans();
+        }
+
+        async function returnBook() {
+            const bookId = parseInt(document.getElementById('bookId').value);
+            const res = await fetch(`${loanUrl}return/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ book: bookId })
+            });
+            const data = await res.json();
+            alert(JSON.stringify(data));
+            loadLoans();
+        }
+
+        loadLoans();
+    </script>
+</body>
+
+</html>

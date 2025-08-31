@@ -1,14 +1,17 @@
-from rest_framework import viewsets
-from django.contrib.auth.models import User
-from rest_framework.serializers import ModelSerializer
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 
-# Serializer for User
-class UserSerializer(ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email']
+def register_page(request):
+    return render(request, 'register.html')
 
-# ViewSet for User
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+def login_page(request):
+    return render(request, 'login.html')
+
+@login_required
+def borrow_page(request):
+    return render(request, 'borrow.html')
+
+def logout_user(request):
+    logout(request)
+    return redirect('login_page')
