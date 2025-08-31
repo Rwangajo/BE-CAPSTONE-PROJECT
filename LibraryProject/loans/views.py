@@ -1,42 +1,47 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
-from django.utils import timezone
 from .models import Loan
-from .serializers import LoanSerializer
+from .serializers import LoanSerializer, ReturnBookSerializer
 from books.models import Book
-
 
 class LoanViewSet(viewsets.ModelViewSet):
     queryset = Loan.objects.all()
     serializer_class = LoanSerializer
     permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
-        """Handle borrowing a book."""
-        book = serializer.validated_data['book']
+    def get_queryset(self):
+        # List only loans for the logged-in user
+        return Loan.objects.filter(user=self.request.user)
 
-        # check availability
-        if book.copies_available <= 0:
-            raise ValueError("This book is not available for borrowing.")
+    @action(detail=False, methods=['post'], url_path='checkout')
+    def checkout(self, request):
+        """
+        Borrow a book
+        Expected JSON: { "book": <book_id> }
+        """
+        serializer = LoanSerializer(data={
+            'user': request.user.id,
+            'book': request.data.get('book')
+        })
+        serializer.is_valid(raise_exception=True)
+        loan = serializer.save()
+        return Response(LoanSerializer(loan).data, status=status.HTTP_201_CREATED)
 
-        # decrease copies
-        book.copies_available -= 1
-        book.save()
+    @action(detail=False, methods=['post'], url_path='return')
+    def return_book(self, request):
+        """
+        Return a borrowed book
+        Expected JSON: { "book": <book_id> }
+        """
+        book_id = request.data.get('book')
+        try:
+            loan = Loan.objects.get(user=request.user, book_id=book_id, status='borrowed')
+        except Loan.DoesNotExist:
+            return Response({"error": "No active loan found for this book."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # save loan record with user + borrowed_date
-        serializer.save(user=self.request.user, borrowed_date=timezone.now())
-
-    def update(self, request, *args, **kwargs):
-        """Handle returning a book."""
-        instance = self.get_object()
-
-        if 'returned_date' in request.data and not instance.returned_date:
-            # returning a book
-            instance.returned_date = timezone.now()
-            instance.book.copies_available += 1
-            instance.book.save()
-            instance.save()
-
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = ReturnBookSerializer(loan, data={})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"success": f"Book '{loan.book.title}' returned successfully."}, status=status.HTTP_200_OK)

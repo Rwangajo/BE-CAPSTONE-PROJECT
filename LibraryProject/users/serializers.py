@@ -3,18 +3,17 @@ from django.contrib.auth.hashers import make_password
 from .models import User
 
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=False)
     class Meta:
         model = User
-        fields = ["id", "username", "email", "password", "role", "date_of_membership", "is_active", "first_name", "last_name"]
-        read_only_fields = ["date_of_membership"]
+        fields = ['id', 'username', 'email', 'password', 'role']
+        extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        pwd = validated_data.pop("password", None)
-        user = User(**validated_data)
-        if pwd:
-            user.password = make_password(pwd)
-        user.save()
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password']
+        )
         return user
 
     def update(self, instance, validated_data):

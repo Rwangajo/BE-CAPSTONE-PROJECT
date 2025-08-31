@@ -1,17 +1,25 @@
 from django.contrib import admin
 from django.urls import path, include
-from . import views
+from rest_framework import routers
+from books.views import BookViewSet
+from users.views import UserViewSet
+from loans.views import LoanViewSet
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
+# Router for DRF ViewSets
+router = routers.DefaultRouter()
+router.register(r'books', BookViewSet, basename='books')
+router.register(r'users', UserViewSet, basename='users')
+router.register(r'loans', LoanViewSet, basename='loans')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/', include(router.urls)),
 
-    # API Endpoints
-    path('api/', include('books.urls')),   # /api/books/
-    path('api/', include('users.urls')),   # /api/users/, /api/token/
-    path('api/', include('loans.urls')),   # /api/loans/
-    path('register/', views.register_page, name='register_page'),
-    path('login/', views.login_page, name='login_page'),
-    path('borrow/', views.borrow_page, name='borrow_page'),
-    path('logout/', views.logout_user, name='logout'),
+    # JWT Authentication
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

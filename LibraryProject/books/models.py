@@ -1,11 +1,17 @@
 from django.db import models
 
-class Book(models.Model):
-    title = models.CharField(max_length=255)
-    author = models.CharField(max_length=255)
-    isbn = models.CharField(max_length=13, unique=True)  # unique ISBN
-    published_date = models.DateField(default="2000-01-01")
-    copies_available = models.PositiveIntegerField(default=0)
+class Category(models.Model):
+    name = models.CharField(max_length=100)
 
     def __str__(self):
-        return f"{self.title} by {self.author}"
+        return self.name
+
+class Book(models.Model):
+    title = models.CharField(max_length=200)
+    author = models.CharField(max_length=100)
+    isbn = models.CharField(max_length=13, blank=True, null=True)  # Optional
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+    total_copies = models.PositiveIntegerField(default=1)  # Total copies of the book
+
+    def __str__(self):
+        return self.title

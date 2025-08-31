@@ -9,33 +9,69 @@
     <h1>Borrow / Return Books</h1>
     <p>Welcome, {{ user.username }} | <a href="/logout/">Logout</a></p>
 
-    <input type="number" id="bookId" placeholder="Book ID">
-    <button onclick="borrowBook()">Borrow</button>
-    <button onclick="returnBook()">Return</button>
+    <h2>Available Books</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Available Copies</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="booksList"></tbody>
+    </table>
 
     <h2>Your Loans</h2>
     <ul id="loanList"></ul>
 
     <script>
-        const token = '{{ request.user.auth_token.key if request.user.is_authenticated else "" }}';
-        const loanUrl = '/api/loans/';
+        const token = localStorage.getItem('token'); // JWT stored after login
         const booksUrl = '/api/books/';
+        const loansUrl = '/api/loans/';
+
+        async function loadBooks() {
+            const res = await fetch(booksUrl + '?available=true', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const books = await res.json();
+            const tbody = document.getElementById('booksList');
+            tbody.innerHTML = '';
+            books.forEach(book => {
+                tbody.innerHTML += `
+            <tr>
+                <td>${book.id}</td>
+                <td>${book.title}</td>
+                <td>${book.author}</td>
+                <td>${book.copies_available}</td>
+                <td>
+                    <button onclick="borrowBook(${book.id})">Borrow</button>
+                </td>
+            </tr>
+        `;
+            });
+        }
 
         async function loadLoans() {
-            const res = await fetch(`${loanUrl}user/`, {
+            const res = await fetch(`${loansUrl}user/`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const loans = await res.json();
             const loanList = document.getElementById('loanList');
             loanList.innerHTML = '';
             loans.forEach(l => {
-                loanList.innerHTML += `<li>Book ID: ${l.book} | Borrowed: ${l.borrow_date} | Returned: ${l.return_date || 'Not yet'}</li>`;
+                loanList.innerHTML += `
+            <li>
+                ${l.book_title} | Borrowed: ${l.borrow_date} | Returned: ${l.return_date || 'Not yet'}
+                <button onclick="returnBook(${l.book})">Return</button>
+            </li>
+        `;
             });
         }
 
-        async function borrowBook() {
-            const bookId = parseInt(document.getElementById('bookId').value);
-            const res = await fetch(`${loanUrl}checkout/`, {
+        async function borrowBook(bookId) {
+            const res = await fetch(`${loansUrl}checkout/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -45,12 +81,12 @@
             });
             const data = await res.json();
             alert(JSON.stringify(data));
+            loadBooks();
             loadLoans();
         }
 
-        async function returnBook() {
-            const bookId = parseInt(document.getElementById('bookId').value);
-            const res = await fetch(`${loanUrl}return/`, {
+        async function returnBook(bookId) {
+            const res = await fetch(`${loansUrl}return/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -60,9 +96,12 @@
             });
             const data = await res.json();
             alert(JSON.stringify(data));
+            loadBooks();
             loadLoans();
         }
 
+        // Load on page load
+        loadBooks();
         loadLoans();
     </script>
 </body>
